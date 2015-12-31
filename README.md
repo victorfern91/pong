@@ -1,4 +1,5 @@
 # PONG (HTML5 + Ecmascript 6) game
+### State: Under Development
 This is my first game based in HTML5 (using canvas) and ECMAScript 6. Dependency: **Node.js**.
 ## Install dependencies
 Install Node.js (https://nodejs.org/en/).
@@ -15,7 +16,7 @@ $ npm run build
 ```sh
 $ npm run server
 ```
-Go to chrome/firefox/safari/etc and navigate to http://localhost:8080
+Go to chrome/firefox/safari/etc and navigate to http://localhost:8080/
 ## Any question?
 Send me an e-mail to victorfern91@gmail.com.
 
