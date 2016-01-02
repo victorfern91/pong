@@ -14,7 +14,7 @@ $ npm run build
 ```
 ## Play pong
 ```sh
-$ npm run server
+$ npm start
 ```
 Go to chrome/firefox/safari/etc and navigate to http://localhost:8080/
 ## Any question?
