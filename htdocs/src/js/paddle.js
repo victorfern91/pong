@@ -1,34 +1,47 @@
 export default class{
-    constructor(x, y, h, l) {
+    constructor(canvas, x, y, w, h, ap) {
       this.x = x;
       this.y = y;
       this.height = h;
-      this.length = l;
+      this.width = w;
+      this.speed = 5;
       this.moveUp = false;
       this.moveDown = false;
+      this.autoPilot = ap;
+      this.canvas = canvas;
     }
 
-    move() {
-      if (this.moveUp) {
-        this.y -= 5;
-      } else if (this.moveDown) {
-        this.y += 5;
+    move(objectsArray) {
+      if (!this.autoPilot) {
+        if (this.moveUp) {
+          this.y -= this.speed;
+        } else if (this.moveDown) {
+          this.y += this.speed;
+        }
+      } else if (objectsArray[2].x > this.canvas.height / 2) {
+        if (objectsArray[2].y >= (this.y + (this.y + this.width)) / 2) {
+          this.y += this.speed;
+        } else {
+          this.y -= this.speed;
+        }
       }
       if (this.y < 0) {
         this.y = 0;
-      } else if (this.y > 600 - this.length) {
-        this.y = 600 - this.length;
+      } else if ((this.y + this.height) > this.canvas.height) {
+        this.y = this.canvas.height - this.height;
       }
     }
 
     draw(canvas) {
-      canvas.context.rect(this.x, this.y, this.height, this.length);
+      canvas.context.rect(this.x, this.y, this.width, this.height);
       canvas.context.fillStyle = 'white';
       canvas.context.fill();
     }
 
-    collision(yValue1, yValue2) {
-      return (yValue1 >= this.y && yValue1 <= this.y + this.length) ||
-             (yValue2 >= this.y && yValue2 <= this.y + this.length);
+    collision(x, y, width, height) {
+      return (this.x < x + width &&
+             this.x + this.width > x &&
+             this.y < y + height &&
+             this.y + this.height > y);
     }
 }

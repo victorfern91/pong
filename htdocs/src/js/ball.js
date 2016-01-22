@@ -1,37 +1,40 @@
 // Ball class
 export default class {
-    constructor(length, initialX, initialY) {
-      this.length = length;
+    constructor(canvas, width, initialX, initialY) {
       this.x = initialX;
       this.y = initialY;
+      this.width = width;
+      this.height = width;
       this.xVelocity = 2;
-      this.yVelocity = 5;
+      this.yVelocity = 4;
+      this.hit = 0;
+      this.canvas = canvas;
     };
 
     move(objectArray) {
       this.collision(objectArray);
-      this.x += this.xVelocity;
-      this.y += this.yVelocity;
+      this.x += this.xVelocity * (1 + this.hit * 0.2);
+      this.y += this.yVelocity * (1 + this.hit * 0.2);
     };
 
     collision(objectArray) {
-      if (this.y > (600 - this.length) || this.y < 0) {
+      if (this.y > (this.canvas.height - this.height) || this.y < 0) {
         this.yVelocity = -this.yVelocity;
       }
-      if (this.x > (800 - this.length) || this.x < 0) {
+      if (this.x > (this.canvas.width - this.width) || this.x < 0) {
         this.xVelocity = -this.xVelocity;
       }
-      // detect collission with left paddle
-      if (this.x === 54) {
-        if (objectArray[0].collision(this.y, this.y + this.length)) {
-          this.xVelocity = -this.xVelocity;
-        }
+
+      if (objectArray[0].collision(this.x, this.y, this.width, this.width) ||
+      objectArray[1].collision(this.x, this.y, this.width, this.height)) {
+        this.xVelocity = -this.xVelocity;
+        this.hit++;
       }
     };
 
     // draw method
     draw(canvas) {
-      canvas.context.rect(this.x, this.y, this.length, this.length);
+      canvas.context.rect(this.x, this.y, this.width, this.height);
       canvas.context.fillStyle = 'white';
       canvas.context.fill();
     };

@@ -12,37 +12,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Ball class
 
 var _class = (function () {
-  function _class(length, initialX, initialY) {
+  function _class(canvas, width, initialX, initialY) {
     _classCallCheck(this, _class);
 
-    this.length = length;
     this.x = initialX;
     this.y = initialY;
+    this.width = width;
+    this.height = width;
     this.xVelocity = 2;
-    this.yVelocity = 5;
+    this.yVelocity = 4;
+    this.hit = 0;
+    this.canvas = canvas;
   }
 
   _createClass(_class, [{
     key: 'move',
     value: function move(objectArray) {
       this.collision(objectArray);
-      this.x += this.xVelocity;
-      this.y += this.yVelocity;
+      this.x += this.xVelocity * (1 + this.hit * 0.2);
+      this.y += this.yVelocity * (1 + this.hit * 0.2);
     }
   }, {
     key: 'collision',
     value: function collision(objectArray) {
-      if (this.y > 600 - this.length || this.y < 0) {
+      if (this.y > this.canvas.height - this.height || this.y < 0) {
         this.yVelocity = -this.yVelocity;
       }
-      if (this.x > 800 - this.length || this.x < 0) {
+      if (this.x > this.canvas.width - this.width || this.x < 0) {
         this.xVelocity = -this.xVelocity;
       }
-      // detect collission with left paddle
-      if (this.x === 54) {
-        if (objectArray[0].collision(this.y, this.y + this.length)) {
-          this.xVelocity = -this.xVelocity;
-        }
+
+      if (objectArray[0].collision(this.x, this.y, this.width, this.width) || objectArray[1].collision(this.x, this.y, this.width, this.height)) {
+        this.xVelocity = -this.xVelocity;
+        this.hit++;
       }
     }
   }, {
@@ -50,7 +52,7 @@ var _class = (function () {
 
     // draw method
     value: function draw(canvas) {
-      canvas.context.rect(this.x, this.y, this.length, this.length);
+      canvas.context.rect(this.x, this.y, this.width, this.height);
       canvas.context.fillStyle = 'white';
       canvas.context.fill();
     }
@@ -78,12 +80,35 @@ var running = false;
 var objects = [];
 var canvas = undefined;
 
-(function () {
-  init();
-  objects.push(new _paddle2.default(45, canvas.height / 2 - 50, 15, 100));
-  objects.push(new _ball2.default(15, 10, 10));
-  requestAnimationFrame(animate); // Start the animation.
+window.requestAnimFrame = (function () {
+  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) {
+    window.setTimeout(callback, 1000 / 60);
+  };
 })();
+
+(function (w, d) {
+  init();
+  var paddleWidth = canvas.height / 35;
+  var paddleHeigth = canvas.height / 5;
+  objects.push(new _paddle2.default(canvas, // canvas object
+  paddleWidth * 2, // x initial
+  canvas.height / 2 - paddleHeigth / 2, // y initial
+  paddleWidth, // paddle width
+  paddleHeigth, // paddle height
+  false)); // auto pilot flag
+  objects.push(new _paddle2.default(canvas, // canvas object
+  canvas.width - paddleWidth * 3, // x initial
+  canvas.height / 2 - paddleHeigth / 2, // y initial
+  paddleWidth, // paddle width
+  paddleHeigth, // paddle height
+  true)); // auto pilot flag (computer)
+  objects.push(new _ball2.default(canvas, canvas.height / 35, canvas.height / 10, canvas.height / 10));
+  w.requestAnimFrame(animate); // Start the animation
+
+  w.PongGame = function () {
+    console.log('First output');
+  };
+})(window, document);
 
 function init() {
   var htmlCanvas = document.getElementById('canvas');
@@ -96,8 +121,8 @@ function init() {
 
 function draw() {
   canvas.context.beginPath();
-  canvas.context.fillStyle = 'black';
-  canvas.context.fillRect(0, 0, canvas.width, canvas.height);
+  canvas.context.clearRect(0, 0, canvas.width, canvas.height);
+  //canvas.context.fillRect(0, 0, canvas.width, canvas.height);
   midcamp();
   for (var i = 0, size = objects.length; i < size; ++i) {
     objects[i].move(objects);
@@ -106,16 +131,16 @@ function draw() {
 };
 
 function midcamp() {
-  var length = 9.5;
+  var length = 10;
   for (var i = 0; i < 21; ++i) {
-    canvas.context.rect(canvas.width / 2 - length / 2, length * i * 3, length, length);
+    canvas.context.rect(canvas.width / 2 - length / 2, length * i * 4, length, length);
     canvas.context.fillStyle = 'white';
     canvas.context.fill();
   }
 }
 
 function animate() {
-  requestAnimationFrame(animate);
+  window.requestAnimFrame(animate);
   draw();
 };
 
@@ -157,42 +182,53 @@ Object.defineProperty(exports, "__esModule", {
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _class = (function () {
-  function _class(x, y, h, l) {
+  function _class(canvas, x, y, w, h, ap) {
     _classCallCheck(this, _class);
 
     this.x = x;
     this.y = y;
     this.height = h;
-    this.length = l;
+    this.width = w;
+    this.speed = 5;
     this.moveUp = false;
     this.moveDown = false;
+    this.autoPilot = ap;
+    this.canvas = canvas;
   }
 
   _createClass(_class, [{
     key: 'move',
-    value: function move() {
-      if (this.moveUp) {
-        this.y -= 5;
-      } else if (this.moveDown) {
-        this.y += 5;
+    value: function move(objectsArray) {
+      if (!this.autoPilot) {
+        if (this.moveUp) {
+          this.y -= this.speed;
+        } else if (this.moveDown) {
+          this.y += this.speed;
+        }
+      } else if (objectsArray[2].x > this.canvas.height / 2) {
+        if (objectsArray[2].y >= (this.y + (this.y + this.width)) / 2) {
+          this.y += this.speed;
+        } else {
+          this.y -= this.speed;
+        }
       }
       if (this.y < 0) {
         this.y = 0;
-      } else if (this.y > 600 - this.length) {
-        this.y = 600 - this.length;
+      } else if (this.y + this.height > this.canvas.height) {
+        this.y = this.canvas.height - this.height;
       }
     }
   }, {
     key: 'draw',
     value: function draw(canvas) {
-      canvas.context.rect(this.x, this.y, this.height, this.length);
+      canvas.context.rect(this.x, this.y, this.width, this.height);
       canvas.context.fillStyle = 'white';
       canvas.context.fill();
     }
   }, {
     key: 'collision',
-    value: function collision(yValue1, yValue2) {
-      return yValue1 >= this.y && yValue1 <= this.y + this.length || yValue2 >= this.y && yValue2 <= this.y + this.length;
+    value: function collision(x, y, width, height) {
+      return this.x < x + width && this.x + this.width > x && this.y < y + height && this.y + this.height > y;
     }
   }]);
 
