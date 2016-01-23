@@ -1,8 +1,8 @@
 // Ball class
 export default class {
-    constructor(canvas, width, initialX, initialY) {
-      this.x = initialX;
-      this.y = initialY;
+    constructor(canvas, width, x, y) {
+      this.x = x;
+      this.y = y;
       this.width = width;
       this.height = width;
       this.xVelocity = 2;
@@ -22,7 +22,15 @@ export default class {
         this.yVelocity = -this.yVelocity;
       }
       if (this.x > (this.canvas.width - this.width) || this.x < 0) {
-        this.xVelocity = -this.xVelocity;
+        this.hit = 0;
+        if (this.xVelocity > 0) { // player scores
+          this.x = this.canvas.width / 4;
+          objectArray[3].score.player++;
+        } else { // computer scores
+          this.x = (3 * this.canvas.width) / 4;
+          objectArray[3].score.computer++;
+        }
+        this.y = (Math.random() * this.canvas.height);
       }
 
       if (objectArray[0].collision(this.x, this.y, this.width, this.width) ||

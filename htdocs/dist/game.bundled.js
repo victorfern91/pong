@@ -12,11 +12,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Ball class
 
 var _class = (function () {
-  function _class(canvas, width, initialX, initialY) {
+  function _class(canvas, width, x, y) {
     _classCallCheck(this, _class);
 
-    this.x = initialX;
-    this.y = initialY;
+    this.x = x;
+    this.y = y;
     this.width = width;
     this.height = width;
     this.xVelocity = 2;
@@ -39,7 +39,17 @@ var _class = (function () {
         this.yVelocity = -this.yVelocity;
       }
       if (this.x > this.canvas.width - this.width || this.x < 0) {
-        this.xVelocity = -this.xVelocity;
+        this.hit = 0;
+        if (this.xVelocity > 0) {
+          // player scores
+          this.x = this.canvas.width / 4;
+          objectArray[3].score.player++;
+        } else {
+          // computer scores
+          this.x = 3 * this.canvas.width / 4;
+          objectArray[3].score.computer++;
+        }
+        this.y = Math.random() * this.canvas.height;
       }
 
       if (objectArray[0].collision(this.x, this.y, this.width, this.width) || objectArray[1].collision(this.x, this.y, this.width, this.height)) {
@@ -87,88 +97,98 @@ window.requestAnimFrame = (function () {
 })();
 
 (function (w, d) {
-  init();
-  var paddleWidth = canvas.height / 35;
-  var paddleHeigth = canvas.height / 5;
-  objects.push(new _paddle2.default(canvas, // canvas object
-  paddleWidth * 2, // x initial
-  canvas.height / 2 - paddleHeigth / 2, // y initial
-  paddleWidth, // paddle width
-  paddleHeigth, // paddle height
-  false)); // auto pilot flag
-  objects.push(new _paddle2.default(canvas, // canvas object
-  canvas.width - paddleWidth * 3, // x initial
-  canvas.height / 2 - paddleHeigth / 2, // y initial
-  paddleWidth, // paddle width
-  paddleHeigth, // paddle height
-  true)); // auto pilot flag (computer)
-  objects.push(new _ball2.default(canvas, canvas.height / 35, canvas.height / 10, canvas.height / 10));
-  w.requestAnimFrame(animate); // Start the animation
-
-  w.PongGame = function () {
-    console.log('First output');
+  w.PongGame = {
+    initialize: function initialize() {
+      var pongElement = d.getElementById('pong');
+      pongElement.innerHTML += '<canvas id="canvas" width="' + pongElement.offsetWidth + '" height="' + pongElement.offsetHeight + '" ></canvas>';
+      init();
+      var paddleWidth = canvas.height / 35;
+      var paddleHeigth = canvas.height / 5;
+      objects.push(new _paddle2.default(canvas, paddleWidth * 2, canvas.height / 2 - paddleHeigth / 2, paddleWidth, paddleHeigth, false));
+      objects.push(new _paddle2.default(canvas, canvas.width - paddleWidth * 3, canvas.height / 2 - paddleHeigth / 2, paddleWidth, paddleHeigth, true));
+      objects.push(new _ball2.default(canvas, canvas.height / 35, canvas.height / 10, canvas.height / 10));
+      objects.push({
+        score: {
+          computer: 0,
+          player: 0
+        }
+      });
+      w.requestAnimFrame(animate); // Start the animation
+    }
   };
-})(window, document);
 
-function init() {
-  var htmlCanvas = document.getElementById('canvas');
-  canvas = {
-    context: htmlCanvas.getContext('2d'),
-    width: htmlCanvas.width,
-    height: htmlCanvas.offsetHeight
+  function init() {
+    var htmlCanvas = d.getElementById('canvas');
+    canvas = {
+      context: htmlCanvas.getContext('2d'),
+      width: htmlCanvas.width,
+      height: htmlCanvas.offsetHeight
+    };
   };
-};
 
-function draw() {
-  canvas.context.beginPath();
-  canvas.context.clearRect(0, 0, canvas.width, canvas.height);
-  //canvas.context.fillRect(0, 0, canvas.width, canvas.height);
-  midcamp();
-  for (var i = 0, size = objects.length; i < size; ++i) {
-    objects[i].move(objects);
-    objects[i].draw(canvas);
-  }
-};
+  function draw() {
+    canvas.context.beginPath();
+    canvas.context.clearRect(0, 0, canvas.width, canvas.height);
+    midcamp();
+    drawScore();
 
-function midcamp() {
-  var length = 10;
-  for (var i = 0; i < 21; ++i) {
-    canvas.context.rect(canvas.width / 2 - length / 2, length * i * 4, length, length);
+    for (var i = 0, size = objects.length - 1; i < size; ++i) {
+      objects[i].move(objects);
+      objects[i].draw(canvas);
+    }
+  };
+
+  function drawScore() {
+    canvas.context.font = canvas.height / 8 + 'px vt323';
     canvas.context.fillStyle = 'white';
-    canvas.context.fill();
+    canvas.context.fillText(objects[3].score.player, canvas.width * 0.23, canvas.height / 8 + 10); // text, y, x
+    canvas.context.fillText(objects[3].score.computer, canvas.width * 0.75, canvas.height / 8 + 10); // text, y, x
   }
-}
 
-function animate() {
-  window.requestAnimFrame(animate);
-  draw();
-};
-
-window.addEventListener('keydown', function (e) {
-  switch (e.keyCode) {
-    case 38:
-      // Down
-      objects[0].moveUp = true;
-      break;
-    case 40:
-      // Up
-      objects[0].moveDown = true;
-      break;
+  function midcamp() {
+    var length = 10;
+    for (var i = 0; i < 21; ++i) {
+      canvas.context.rect(canvas.width / 2 - length / 2, length * i * 4, length, length);
+      canvas.context.fillStyle = 'white';
+      canvas.context.fill();
+    }
   }
-});
 
-window.addEventListener('keyup', function (e) {
-  switch (e.keyCode) {
-    case 38:
-      // Down
-      objects[0].moveUp = false;
-      break;
-    case 40:
-      // Up
-      objects[0].moveDown = false;
-      break;
-  }
-});
+  function animate() {
+    w.requestAnimFrame(animate);
+    draw();
+  };
+
+  w.addEventListener('keydown', function (e) {
+    switch (e.keyCode) {
+      case 38:
+        // Down
+        objects[0].moveUp = true;
+        e.preventDefault();
+        break;
+      case 40:
+        // Up
+        objects[0].moveDown = true;
+        e.preventDefault();
+        break;
+    }
+  });
+
+  w.addEventListener('keyup', function (e) {
+    switch (e.keyCode) {
+      case 38:
+        // Down
+        objects[0].moveUp = false;
+        e.preventDefault();
+        break;
+      case 40:
+        // Up
+        objects[0].moveDown = false;
+        e.preventDefault();
+        break;
+    }
+  });
+})(window, document);
 
 },{"./ball":1,"./paddle":3}],3:[function(require,module,exports){
 'use strict';
