@@ -1,8 +1,8 @@
 import Ball from './ball';
 import Paddle from './paddle';
 
-const running = false;
-const objects = [];
+let running = false;
+let objects = [];
 let canvas;
 
 window.requestAnimFrame = (function() {
@@ -22,6 +22,7 @@ window.requestAnimFrame = (function() {
       let pongElement = d.getElementById('pong');
       pongElement.innerHTML += '<canvas id="canvas" width="' + pongElement.offsetWidth + '" height="' + pongElement.offsetHeight + '" >Your Browser doesn\'t support HTML5 capabilities. Try Google Chrome.</canvas>';
       init();
+      running = true;
       let paddleWidth = canvas.height / 35;
       let paddleHeigth = canvas.height / 5;
       objects.push(new Paddle(canvas,
@@ -45,6 +46,41 @@ window.requestAnimFrame = (function() {
           }
         });
       w.requestAnimFrame(animate); // Start the animation
+
+      w.addEventListener('keydown', function(e) {
+        if (objects[0] !== null) {
+          switch (e.keyCode) {
+            case 38: // Down
+              objects[0].moveUp = true;
+              e.preventDefault();
+            break;
+            case 40: // Up
+              objects[0].moveDown = true;
+              e.preventDefault();
+            break;
+          }
+        }
+      });
+
+      w.addEventListener('keyup', function(e) {
+        if (objects[0] !== null) {
+          switch (e.keyCode) {
+            case 38: // Down
+              objects[0].moveUp = false;
+              e.preventDefault();
+            break;
+            case 40: // Up
+              objects[0].moveDown = false;
+              e.preventDefault();
+            break;
+          }
+        }
+      });
+    },
+    delete: function() {
+      objects = [];
+      running = false;
+      canvas = null;
     }
   };
 
@@ -86,35 +122,11 @@ window.requestAnimFrame = (function() {
     }
 
   function animate() {
-    w.requestAnimFrame(animate);
-    draw();
+    if (running) {
+      w.requestAnimFrame(animate);
+      draw();
+    }
   };
-
-  w.addEventListener('keydown', function(e) {
-    switch (e.keyCode) {
-      case 38: // Down
-        objects[0].moveUp = true;
-        e.preventDefault();
-      break;
-      case 40: // Up
-        objects[0].moveDown = true;
-        e.preventDefault();
-      break;
-    }
-  });
-
-  w.addEventListener('keyup', function(e) {
-    switch (e.keyCode) {
-      case 38: // Down
-        objects[0].moveUp = false;
-        e.preventDefault();
-      break;
-      case 40: // Up
-        objects[0].moveDown = false;
-        e.preventDefault();
-      break;
-    }
-  });
 
 })(window, document);
 
